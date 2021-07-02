@@ -52,6 +52,24 @@ void loop()
 {
   delay(1000);
   printLocalTime();
+
+  // if (H >= 0 && H < 7)
+  // {
+  //   setColor(0, 0, 50);
+  // }
+  // //From 07:00 to 12:00
+  // else if (H >= 7 && H < 12)
+  // {
+  //   setColor(50, 50, 100);
+  // }
+  // else if (H >= 12 && H < 19)
+  // {
+  //   setColor(180, 180, 180);
+  // }
+  // else if (H >= 19 && H < 21)
+  // {
+  //   setColor(50, 50, 100);
+  // }
 }
 
 void printLocalTime()

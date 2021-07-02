@@ -1,0 +1,21 @@
+{
+    "board": {
+        "package": "esp32",
+        "architecture": "esp32",
+        "version": "latest"
+    },
+    "dependencies": [
+        {
+            "git": "https://github.com/me-no-dev/ESPAsyncWebServer.git"
+        },
+        {
+            "git": "https://github.com/me-no-dev/AsyncTCP.git"
+        },
+        {
+            "git": "https://github.com/espressif/arduino-esp32.git"
+        },
+        {
+            "git": "https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFi"
+        }
+    ]
+}

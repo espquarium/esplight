@@ -4,11 +4,15 @@
 #include <DNSServer.h>
 #include <WebServer.h>
 // #include <ESPAsyncWebServer.h>
+#include <ArduinoJson.h>
+#include <StreamUtils.h>
 #include <TFT_eSPI.h>
 #include <WiFi.h>
 #include <WiFiManager.h>
 #include "esp_adc_cal.h"
 #include "time.h"
+
+#define EEPROM_SIZE 1
 
 #ifndef TFT_DISPOFF
 #define TFT_DISPOFF 0x28
@@ -40,6 +44,12 @@ const int daylightOffset_sec = 3600;
 const char* PARAM_MESSAGE = "message";
 
 // todo https://stackoverflow.com/questions/2548075/c-string-template-library
+
+struct LighTime {
+    int hours;
+    int minutes;
+    int ch[4];  // 4 channels
+};
 
 void printToTft(const String& message, bool reset = true, int offset = 0) {
     tft.setTextColor(TFT_GREEN, TFT_BLACK);
@@ -175,6 +185,14 @@ void button_loop() {
 void setup() {
     Serial.begin(9600);
     Serial.println("Start");
+
+    EEPROM.begin(EEPROM_SIZE);
+
+    DynamicJsonDocument doc(1024);
+    EepromStream eepromStream(0, EEPROM_SIZE);
+    deserializeJson(doc, json);
+    eepromStream.flush();
+
     wifiManager.setConfigPortalTimeout(180);
     startupScreen();
 

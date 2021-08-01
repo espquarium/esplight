@@ -1,18 +1,17 @@
-#include <Arduino.h>
-#include <Button2.h>
-#include <DNSServer.h>
-#include <WebServer.h>
-#include <WiFi.h>
-#include <WiFiManager.h>
-#include <storage_helper.h>
-#include <tft_helper.h>
+#include "Arduino.h"
+#include "Button2.h"
+#include "DNSServer.h"
+#include "WebServer.h"
+#include "WiFi.h"
+#include "WiFiManager.h"
+//#include "storage_helper.h"
 #include "esp_adc_cal.h"
+#include "light_helper.h"
+#include "tft_helper.h"
 #include "time.h"
 
 #define EEPROM_SIZE 1
 
-#define ADC_EN 14
-#define ADC_PIN 34
 #define BUTTON_1 0
 #define BUTTON_2 35
 
@@ -24,6 +23,7 @@ WiFiManager wifiManager;
 int runServer = true;
 
 WebServer server(80);
+LightHelper light = LightHelper();
 
 const char* ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 0;
@@ -118,6 +118,18 @@ void button_loop() {
     btn2.loop();
 }
 
+void handleToggle() {
+    light.setForceLight(!light.forceLight);
+    server.send(200, "text/plain", "toggled light");
+}
+
+void handleVerify() {
+    String resText = "light is ";
+    resText += light.forceLight ? "on" : "off";
+    printToTft(resText, false, 40);
+    server.send(200, "text/plain", resText);
+}
+
 void setup() {
     Serial.begin(9600);
     Serial.println("Start");
@@ -134,11 +146,18 @@ void setup() {
     server.on("/", HTTP_GET,
               []() { server.send(200, "text/plain", "Hello, world"); });
 
+    server.on("/toggle", HTTP_GET,
+              handleToggle);
+
+    server.on("/verify", HTTP_GET,
+              handleVerify);
+
     server.begin();
 }
 
 void loop() {
     button_loop();
+    light.loop();
     if (runServer) {
         server.handleClient();
     }

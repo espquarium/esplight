@@ -4,9 +4,10 @@
 #include "WebServer.h"
 #include "WiFi.h"
 #include "WiFiManager.h"
-//#include "storage_helper.h"
 #include "esp_adc_cal.h"
+// #include "http_handles.h"
 #include "light_helper.h"
+#include "storage_helper.h"
 #include "tft_helper.h"
 #include "time.h"
 
@@ -22,6 +23,7 @@ WiFiManager wifiManager;
 
 int runServer = true;
 
+LighTimeStorage lightStorage = LighTimeStorage();
 WebServer server(80);
 LightHelper light = LightHelper();
 
@@ -32,13 +34,6 @@ const int daylightOffset_sec = 3600;
 const char* PARAM_MESSAGE = "message";
 
 // todo https://stackoverflow.com/questions/2548075/c-string-template-library
-
-void configModeCallback(WiFiManager* myWiFiManager) {
-    Serial.println("Entrou no modo de configuração");
-    Serial.println(WiFi.softAPIP());  // imprime o IP do AP
-    Serial.println(
-        myWiFiManager->getConfigPortalSSID());  // imprime o SSID criado da rede
-}
 
 // Callback que indica que salvamos uma nova rede para se conectar (modo
 // estação)
@@ -92,25 +87,6 @@ void button_init() {
             printToTft("Conectado");
             printToTft("IP: " + WiFi.localIP().toString(), false, 10);
         });
-
-    // btn2.setPressedHandler(
-    //     [](Button2& b) {
-    //         wifiManager.setConfigPortalTimeout(180);
-    //         String portalName = "ESPLIGHT-WIFI";
-    //         printToTft(portalName);
-    //         printToTft("Acesse seu telefone e conecte para configurar", false, 10);
-    //         if (!wifiManager.startConfigPortal(portalName.c_str())) {
-    //             printToTft("Falha ao conectar");
-    //             espDelay(3000);
-    //             //reset and try again, or maybe put it to deep sleep
-    //             ESP.restart();
-    //             espDelay(5000);
-    //         }
-
-    //         printToTft("Conectado");
-    //         printToTft("IP: " + WiFi.localIP().toString(), false, 10);
-    //         espDelay(3000);
-    //     });
 }
 
 void button_loop() {
@@ -130,16 +106,25 @@ void handleVerify() {
     server.send(200, "text/plain", resText);
 }
 
+void handleLightTimes() {
+    // Serial.println(lightStorage.getTimesAsJson());
+    server.send(200, "application/json", lightStorage.getTimesAsJson());
+}
+
 void setup() {
     Serial.begin(9600);
     Serial.println("Start");
+    lightStorage.setup();
 
     wifiManager.setConfigPortalTimeout(180);
+
     startupScreen();
 
     printToTft("ESPLIGHT");
 
     button_init();
+
+    lightStorage.load();
 
     connectToWifi();
 
@@ -152,12 +137,15 @@ void setup() {
     server.on("/verify", HTTP_GET,
               handleVerify);
 
+    server.on("/light-times", HTTP_GET,
+              handleLightTimes);
+
     server.begin();
 }
 
 void loop() {
     button_loop();
-    light.loop();
+    // light.loop();
     if (runServer) {
         server.handleClient();
     }

@@ -20,6 +20,10 @@
     "system_error": "cpp",
     "functional": "cpp",
     "tuple": "cpp",
-    "type_traits": "cpp"
+    "type_traits": "cpp",
+    "fstream": "cpp",
+    "memory": "cpp",
+    "atomic": "cpp",
+    "ostream": "cpp"
   }
 }

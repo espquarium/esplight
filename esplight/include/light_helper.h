@@ -1,10 +1,9 @@
 #include "analogWrite.h"
 
 #define MAX_BRIGHTNESS 100
-#define CH1 27
-#define CH2 26
-#define CH3 25
-#define CH4 33
+#define MAX_CHANNELS 4
+
+int PINS[MAX_CHANNELS] = {27, 6, 25, 33};
 
 class LightHelper {
    public:
@@ -16,10 +15,16 @@ class LightHelper {
 
     void
     allChannels(int brightness) {
-        analogWrite(CH1, brightness, MAX_BRIGHTNESS);
-        analogWrite(CH2, brightness, MAX_BRIGHTNESS);
-        analogWrite(CH3, brightness, MAX_BRIGHTNESS);
-        analogWrite(CH4, brightness, MAX_BRIGHTNESS);
+        for (int ch : PINS) {
+            analogWrite(ch, brightness, MAX_BRIGHTNESS);
+        }
+    }
+
+    void
+    perChannel(int channels[MAX_CHANNELS]) {
+        for (int ch = 0; ch < MAX_CHANNELS; ch++) {
+            analogWrite(PINS[ch], ch, MAX_BRIGHTNESS);
+        }
     }
 
     void loop() {

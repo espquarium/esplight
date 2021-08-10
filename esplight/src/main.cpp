@@ -145,7 +145,7 @@ void setup() {
 
 void loop() {
     button_loop();
-    // light.loop();
+    light.loop();
     if (runServer) {
         server.handleClient();
     }

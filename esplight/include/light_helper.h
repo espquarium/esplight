@@ -3,14 +3,14 @@
 #define MAX_BRIGHTNESS 100
 #define MAX_CHANNELS 4
 
-int PINS[MAX_CHANNELS] = {27, 6, 25, 33};
+int PINS[MAX_CHANNELS] = {27, 26, 25, 33};
 
 class LightHelper {
    public:
     bool forceLight;
 
     LightHelper() {
-        forceLight = true;
+        this->forceLight = true;
     }
 
     void
@@ -28,12 +28,12 @@ class LightHelper {
     }
 
     void loop() {
-        if (forceLight) {
+        if (this->forceLight) {
             allChannels(MAX_BRIGHTNESS);
         }
     }
 
     void setForceLight(bool force) {
-        forceLight = force;
+        this->forceLight = force;
     }
 };

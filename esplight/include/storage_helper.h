@@ -4,6 +4,8 @@
 
 #define FORMAT_LITTLEFS_IF_FAILED true
 
+#define FILE_PATH "/data.json"
+
 struct LighTime {
     int h;
     int m;
@@ -25,7 +27,7 @@ class LighTimeStorage {
 
     void load() {
         DynamicJsonDocument doc(6144);
-        File data = LITTLEFS.open("/data.json", "r");
+        File data = LITTLEFS.open(FILE_PATH, "r");
         Serial.println("loading json file");
         DeserializationError error;
 
@@ -73,6 +75,22 @@ class LighTimeStorage {
         }
 
         this->timesSaved = i;
+    }
+
+    void save(const char* json) {
+        Serial.printf("Writing file: %s\r\n", FILE_PATH);
+
+        File file = LITTLEFS.open(FILE_PATH, FILE_WRITE);
+        if (!file) {
+            Serial.println("- failed to open file for writing");
+            return;
+        }
+        if (file.print(json)) {
+            Serial.println("- file written");
+        } else {
+            Serial.println("- write failed");
+        }
+        file.close();
     }
 
     String getTimesAsJson() {

@@ -1,3 +1,4 @@
+// todo https://stackoverflow.com/questions/2548075/c-string-template-library
 #include "Arduino.h"
 #include "Button2.h"
 #include "DNSServer.h"
@@ -5,7 +6,6 @@
 #include "WiFi.h"
 #include "WiFiManager.h"
 #include "esp_adc_cal.h"
-// #include "http_handles.h"
 #include "light_helper.h"
 #include "storage_helper.h"
 #include "tft_helper.h"
@@ -33,10 +33,6 @@ const int daylightOffset_sec = 3600;
 
 const char* PARAM_MESSAGE = "message";
 
-// todo https://stackoverflow.com/questions/2548075/c-string-template-library
-
-// Callback que indica que salvamos uma nova rede para se conectar (modo
-// estação)
 void saveConfigCallback() {
     Serial.println("Configuração salva");
 }
@@ -100,14 +96,21 @@ void handleToggle() {
 }
 
 void handleVerify() {
-    String resText = "light is ";
-    resText += light.forceLight ? "on" : "off";
-    printToTft(resText, false, 40);
-    server.send(200, "text/plain", resText);
+    // String resText = "light is ";
+    // resText += light.forceLight ? "on" : "off";
+    // printToTft(resText, false, 40);
+    String resText = "{\"force\":";
+    resText += (light.forceLight ? "true" : "false");
+    resText += "}";
+    server.send(200, "application/json", resText);
 }
 
 void handleLightTimes() {
-    // Serial.println(lightStorage.getTimesAsJson());
+    server.send(200, "application/json", lightStorage.getTimesAsJson());
+}
+
+void handleUpdateLightTimes() {
+    lightStorage.save(server.arg(0));
     server.send(200, "application/json", lightStorage.getTimesAsJson());
 }
 
@@ -129,7 +132,7 @@ void setup() {
     connectToWifi();
 
     server.on("/", HTTP_GET,
-              []() { server.send(200, "text/plain", "Hello, world"); });
+              []() { server.send(200, "text/plain", "Welcome to reeflight :)"); });
 
     server.on("/toggle", HTTP_GET,
               handleToggle);
@@ -139,6 +142,9 @@ void setup() {
 
     server.on("/light-times", HTTP_GET,
               handleLightTimes);
+
+    server.on("/light-times", HTTP_PUT,
+              handleUpdateLightTimes);
 
     server.begin();
 }

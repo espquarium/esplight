@@ -16,6 +16,8 @@ class LighTimeStorage {
    public:
     LighTime lightTimes[48];
     int timesSaved;
+    String rawJson;
+
     LighTimeStorage() {
     }
 
@@ -23,6 +25,37 @@ class LighTimeStorage {
         if (!LITTLEFS.begin(FORMAT_LITTLEFS_IF_FAILED)) {
             return 0;
         }
+    }
+
+    String transformDocumentInStruct(DynamicJsonDocument doc) {
+        int i = 0;
+        for (JsonObject item : doc.as<JsonArray>()) {
+            int h = item["h"];
+            int m = item["m"];
+
+            JsonArray c = item["c"];
+            int c_0 = c[0];
+            int c_1 = c[1];
+            int c_2 = c[2];
+            int c_3 = c[3];
+
+            this->lightTimes[i].h = h;
+            this->lightTimes[i].m = m;
+
+            this->lightTimes[i].c[0] = c_0;
+            this->lightTimes[i].c[1] = c_1;
+            this->lightTimes[i].c[2] = c_2;
+            this->lightTimes[i].c[3] = c_3;
+
+            i++;
+        }
+        this->timesSaved = i;
+
+        this->rawJson = "";
+
+        serializeJson(doc, this->rawJson);
+
+        return this->rawJson;
     }
 
     void load() {
@@ -52,32 +85,21 @@ class LighTimeStorage {
             return;
         }
 
-        int i = 0;
-        for (JsonObject item : doc.as<JsonArray>()) {
-            int h = item["h"];
-            int m = item["m"];
+        Serial.println("loaded json from disc");
 
-            JsonArray c = item["c"];
-            int c_0 = c[0];
-            int c_1 = c[1];
-            int c_2 = c[2];
-            int c_3 = c[3];
-
-            this->lightTimes[i].h = h;
-            this->lightTimes[i].m = m;
-
-            this->lightTimes[i].c[0] = c_0;
-            this->lightTimes[i].c[1] = c_1;
-            this->lightTimes[i].c[2] = c_2;
-            this->lightTimes[i].c[3] = c_3;
-
-            i++;
-        }
-
-        this->timesSaved = i;
+        transformDocumentInStruct(doc);
     }
 
-    void save(const char* json) {
+    void save(const String json) {
+        DynamicJsonDocument doc(6144);
+        DeserializationError error = deserializeJson(doc, json);
+
+        if (error) {
+            Serial.print(F("deserializeJson() failed: "));
+            Serial.println(error.f_str());
+            return;
+        }
+
         Serial.printf("Writing file: %s\r\n", FILE_PATH);
 
         File file = LITTLEFS.open(FILE_PATH, FILE_WRITE);
@@ -91,31 +113,11 @@ class LighTimeStorage {
             Serial.println("- write failed");
         }
         file.close();
+
+        transformDocumentInStruct(doc);
     }
 
     String getTimesAsJson() {
-        DynamicJsonDocument doc(6144);
-        JsonArray array = doc.to<JsonArray>();
-
-        for (int i = 0; i < this->timesSaved; i++) {
-            LighTime time = lightTimes[i];
-
-            JsonObject nested = array.createNestedObject();
-
-            nested["h"] = time.h;
-            nested["m"] = time.h;
-
-            JsonArray nestedChannels = nested.createNestedArray("c");
-
-            for (int ch : time.c) {
-                nestedChannels.add(ch);
-            }
-        }
-
-        String jsonres;
-
-        serializeJson(doc, jsonres);
-
-        return jsonres;
+        return this->rawJson;
     }
 };

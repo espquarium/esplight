@@ -92,6 +92,7 @@ void button_loop() {
 
 void handleToggle() {
     light.setForceLight(!light.forceLight);
+    server.sendHeader("Access-Control-Allow-Origin", "*");
     server.send(200, "text/plain", "toggled light");
 }
 
@@ -102,15 +103,18 @@ void handleVerify() {
     String resText = "{\"force\":";
     resText += (light.forceLight ? "true" : "false");
     resText += "}";
+    server.sendHeader("Access-Control-Allow-Origin", "*");
     server.send(200, "application/json", resText);
 }
 
 void handleLightTimes() {
+    server.sendHeader("Access-Control-Allow-Origin", "*");
     server.send(200, "application/json", lightStorage.getTimesAsJson());
 }
 
 void handleUpdateLightTimes() {
     lightStorage.save(server.arg(0));
+    server.sendHeader("Access-Control-Allow-Origin", "*");
     server.send(200, "application/json", lightStorage.getTimesAsJson());
 }
 

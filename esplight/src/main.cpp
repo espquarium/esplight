@@ -2,9 +2,11 @@
 #include "Arduino.h"
 #include "Button2.h"
 #include "DNSServer.h"
+#include "NTPClient.h"
 #include "WebServer.h"
 #include "WiFi.h"
 #include "WiFiManager.h"
+#include "WiFiUdp.h"
 #include "esp_adc_cal.h"
 #include "light_helper.h"
 #include "storage_helper.h"
@@ -19,6 +21,7 @@
 Button2 btn1 = Button2(BUTTON_1);
 Button2 btn2 = Button2(BUTTON_2);
 
+WiFiUDP udp;
 WiFiManager wifiManager;
 
 int runServer = true;
@@ -27,11 +30,23 @@ LighTimeStorage lightStorage = LighTimeStorage();
 WebServer server(80);
 LightHelper light = LightHelper();
 
-const char* ntpServer = "pool.ntp.org";
-const long gmtOffset_sec = 0;
-const int daylightOffset_sec = 3600;
-
 const char* PARAM_MESSAGE = "message";
+
+void setupNTP() {
+    //Inicializa o client NTP
+    ntpClient.begin();
+
+    //Espera pelo primeiro update online
+    Serial.println("Waiting for first update");
+    while (!ntpClient.update()) {
+        Serial.print(".");
+        ntpClient.forceUpdate();
+        delay(500);
+    }
+
+    Serial.println();
+    Serial.println("First Update Complete");
+}
 
 void saveConfigCallback() {
     Serial.println("Configuração salva");
@@ -90,9 +105,31 @@ void button_loop() {
     btn2.loop();
 }
 
+void setCrossOrigin() {
+    server.sendHeader(F("Access-Control-Allow-Origin"), F("*"));
+    server.sendHeader(F("Access-Control-Max-Age"), F("600"));
+    server.sendHeader(F("Access-Control-Allow-Methods"), F("PUT,POST,GET,OPTIONS"));
+    server.sendHeader(F("Access-Control-Allow-Headers"), F("*"));
+};
+
+void handleNotFound() {
+    if (server.method() == HTTP_OPTIONS) {
+        setCrossOrigin();
+        server.send(204);
+    } else {
+        server.send(404, "text/plain", "");
+    }
+}
+
+void sendCrossOriginHeader() {
+    Serial.println(F("sendCORSHeader"));
+    setCrossOrigin();
+    server.send(204);
+}
+
 void handleToggle() {
     light.setForceLight(!light.forceLight);
-    server.sendHeader("Access-Control-Allow-Origin", "*");
+    setCrossOrigin();
     server.send(200, "text/plain", "toggled light");
 }
 
@@ -103,18 +140,18 @@ void handleVerify() {
     String resText = "{\"force\":";
     resText += (light.forceLight ? "true" : "false");
     resText += "}";
-    server.sendHeader("Access-Control-Allow-Origin", "*");
+    setCrossOrigin();
     server.send(200, "application/json", resText);
 }
 
 void handleLightTimes() {
-    server.sendHeader("Access-Control-Allow-Origin", "*");
+    setCrossOrigin();
     server.send(200, "application/json", lightStorage.getTimesAsJson());
 }
 
 void handleUpdateLightTimes() {
     lightStorage.save(server.arg(0));
-    server.sendHeader("Access-Control-Allow-Origin", "*");
+    setCrossOrigin();
     server.send(200, "application/json", lightStorage.getTimesAsJson());
 }
 
@@ -124,6 +161,8 @@ void setup() {
     lightStorage.setup();
 
     wifiManager.setConfigPortalTimeout(180);
+
+    setupNTP();
 
     startupScreen();
 
@@ -147,13 +186,18 @@ void setup() {
     server.on("/light-times", HTTP_GET,
               handleLightTimes);
 
+    server.on("/light-times", HTTP_OPTIONS, sendCrossOriginHeader);
+
     server.on("/light-times", HTTP_PUT,
               handleUpdateLightTimes);
+
+    server.onNotFound(handleNotFound);
 
     server.begin();
 }
 
 void loop() {
+    Date date = getDate();
     button_loop();
     light.loop();
     if (runServer) {

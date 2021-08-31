@@ -1,8 +1,8 @@
 // todo https://stackoverflow.com/questions/2548075/c-string-template-library
+#include <NTPClient.h>
 #include "Arduino.h"
 #include "Button2.h"
 #include "DNSServer.h"
-#include "NTPClient.h"
 #include "WebServer.h"
 #include "WiFi.h"
 #include "WiFiManager.h"
@@ -12,6 +12,14 @@
 #include "storage_helper.h"
 #include "tft_helper.h"
 #include "time.h"
+
+struct Date {
+    int hours;
+    int minutes;
+};
+
+const char* ntpServer = "pool.ntp.org";
+const long gmtOffset_sec = 0;
 
 #define EEPROM_SIZE 1
 
@@ -29,24 +37,7 @@ int runServer = true;
 LighTimeStorage lightStorage = LighTimeStorage();
 WebServer server(80);
 LightHelper light = LightHelper();
-
-const char* PARAM_MESSAGE = "message";
-
-void setupNTP() {
-    //Inicializa o client NTP
-    ntpClient.begin();
-
-    //Espera pelo primeiro update online
-    Serial.println("Waiting for first update");
-    while (!ntpClient.update()) {
-        Serial.print(".");
-        ntpClient.forceUpdate();
-        delay(500);
-    }
-
-    Serial.println();
-    Serial.println("First Update Complete");
-}
+NTPClient timeClient(udp, ntpServer, gmtOffset_sec, 60000);
 
 void saveConfigCallback() {
     Serial.println("Configuração salva");
@@ -162,8 +153,6 @@ void setup() {
 
     wifiManager.setConfigPortalTimeout(180);
 
-    setupNTP();
-
     startupScreen();
 
     printToTft("ESPLIGHT");
@@ -197,7 +186,13 @@ void setup() {
 }
 
 void loop() {
-    Date date = getDate();
+    timeClient.update();
+
+    Date date;
+
+    date.hours = timeClient.getHours();
+    date.minutes = timeClient.getMinutes();
+
     button_loop();
     light.loop();
     if (runServer) {

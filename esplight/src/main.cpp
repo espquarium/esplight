@@ -1,5 +1,5 @@
 // todo https://stackoverflow.com/questions/2548075/c-string-template-library
-#include <NTPClient.h>
+
 #include "Arduino.h"
 #include "Button2.h"
 #include "DNSServer.h"
@@ -9,17 +9,10 @@
 #include "WiFiUdp.h"
 #include "esp_adc_cal.h"
 #include "light_helper.h"
+#include "ntp_helper.h"
 #include "storage_helper.h"
 #include "tft_helper.h"
 #include "time.h"
-
-struct Date {
-    int hours;
-    int minutes;
-};
-
-const char* ntpServer = "pool.ntp.org";
-const long gmtOffset_sec = 0;
 
 #define EEPROM_SIZE 1
 
@@ -29,7 +22,6 @@ const long gmtOffset_sec = 0;
 Button2 btn1 = Button2(BUTTON_1);
 Button2 btn2 = Button2(BUTTON_2);
 
-WiFiUDP udp;
 WiFiManager wifiManager;
 
 int runServer = true;
@@ -37,7 +29,7 @@ int runServer = true;
 LighTimeStorage lightStorage = LighTimeStorage();
 WebServer server(80);
 LightHelper light = LightHelper();
-NTPClient timeClient(udp, ntpServer, gmtOffset_sec, 60000);
+NTPHelper ntpHelper = NTPHelper();
 
 void saveConfigCallback() {
     Serial.println("Configuração salva");
@@ -186,13 +178,6 @@ void setup() {
 }
 
 void loop() {
-    timeClient.update();
-
-    Date date;
-
-    date.hours = timeClient.getHours();
-    date.minutes = timeClient.getMinutes();
-
     button_loop();
     light.loop();
     if (runServer) {

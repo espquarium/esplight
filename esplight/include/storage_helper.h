@@ -1,30 +1,26 @@
 #include <ArduinoJson.h>
 #include <LittleFS.h>
 #include "FS.h"
+#include "lighttime_struct.h"
 
 #define FORMAT_LITTLEFS_IF_FAILED true
 
 #define FILE_PATH "/data.json"
 
-struct LighTime {
-    int h;
-    int m;
-    int c[4];  // 4 channels
-};
-
 class LighTimeStorage {
    public:
-    LighTime lightTimes[48];
+    LightTime lightTimes[48];
     int timesSaved;
     String rawJson;
 
     LighTimeStorage() {
     }
 
-    int setup() {
+    bool setup() {
         if (!LITTLEFS.begin(FORMAT_LITTLEFS_IF_FAILED)) {
             return 0;
         }
+        return 1;
     }
 
     String transformDocumentInStruct(DynamicJsonDocument doc) {

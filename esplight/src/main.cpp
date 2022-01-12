@@ -1,140 +1,82 @@
 // todo https://stackoverflow.com/questions/2548075/c-string-template-library
-
 #include "Arduino.h"
-#include "Button2.h"
 #include "DNSServer.h"
 #include "WebServer.h"
 #include "WiFi.h"
 #include "WiFiManager.h"
 #include "WiFiUdp.h"
+#include "date_struct.h"
 #include "esp_adc_cal.h"
 #include "light_helper.h"
 #include "ntp_helper.h"
 #include "storage_helper.h"
-#include "tft_helper.h"
 #include "time.h"
 
 #define EEPROM_SIZE 1
 
-#define BUTTON_1 0
-#define BUTTON_2 35
-
-Button2 btn1 = Button2(BUTTON_1);
-Button2 btn2 = Button2(BUTTON_2);
+void espDelay(int ms) {
+    esp_sleep_enable_timer_wakeup(ms * 1000);
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
+    esp_light_sleep_start();
+}
 
 WiFiManager wifiManager;
-
-int runServer = true;
 
 LighTimeStorage lightStorage = LighTimeStorage();
 WebServer server(80);
 LightHelper light = LightHelper();
 NTPHelper ntpHelper = NTPHelper();
 
-void saveConfigCallback()
-{
+void saveConfigCallback() {
     Serial.println("Configuração salva");
 }
 
-void connectToWifi()
-{
+void connectToWifi() {
     String portalName = "ESPLIGHT-WIFI";
-    printToTft(portalName);
-    printToTft("Acesse seu telefone e conecte para configurar", false, 10);
-    if (!wifiManager.autoConnect(portalName.c_str()))
-    {
-        printToTft("Falha ao conectar");
+
+    WiFi.setHostname(portalName.c_str());
+    wifiManager.setSTAStaticIPConfig(IPAddress(192, 168, 1, 99), IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
+
+    if (!wifiManager.autoConnect(portalName.c_str())) {
         espDelay(3000);
         //reset and try again, or maybe put it to deep sleep
         ESP.restart();
         espDelay(5000);
     }
-
-    printToTft("Conectado");
-    printToTft("IP: " + WiFi.localIP().toString(), false, 10);
     espDelay(3000);
 }
 
-void button_init()
-{
-    btn1.setLongClickHandler(
-        [](Button2 &b)
-        {
-            runServer = false;
-            int r = digitalRead(TFT_BL);
-            tft.fillScreen(TFT_BLACK);
-            tft.setTextColor(TFT_GREEN, TFT_BLACK);
-            tft.setTextDatum(MC_DATUM);
-            tft.drawString("Pressione novamente para ligar", tft.width() / 2,
-                           tft.height() / 2);
-            espDelay(6000);
-            digitalWrite(TFT_BL, !r);
-
-            tft.writecommand(TFT_DISPOFF);
-            tft.writecommand(TFT_SLPIN);
-            //After using light sleep, you need to disable timer wake, because here use external IO port to wake up
-            esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_TIMER);
-            // esp_sleep_enable_ext1_wakeup(GPIO_SEL_35, ESP_EXT1_WAKEUP_ALL_LOW);
-            esp_sleep_enable_ext0_wakeup(GPIO_NUM_35, 0);
-            delay(200);
-            esp_deep_sleep_start();
-        });
-
-    btn1.setClickHandler(
-        [](Button2 &b)
-        {
-            runServer = true;
-            printToTft("Conectado");
-            printToTft("IP: " + WiFi.localIP().toString(), false, 10);
-        });
-}
-
-void button_loop()
-{
-    btn1.loop();
-    btn2.loop();
-}
-
-void setCrossOrigin()
-{
+void setCrossOrigin() {
     server.sendHeader(F("Access-Control-Allow-Origin"), F("*"));
     server.sendHeader(F("Access-Control-Max-Age"), F("600"));
     server.sendHeader(F("Access-Control-Allow-Methods"), F("PUT,POST,GET,OPTIONS"));
     server.sendHeader(F("Access-Control-Allow-Headers"), F("*"));
 };
 
-void handleNotFound()
-{
-    if (server.method() == HTTP_OPTIONS)
-    {
+void handleNotFound() {
+    if (server.method() == HTTP_OPTIONS) {
         setCrossOrigin();
         server.send(204);
-    }
-    else
-    {
+    } else {
         server.send(404, "text/plain", "");
     }
 }
 
-void sendCrossOriginHeader()
-{
+void sendCrossOriginHeader() {
     Serial.println(F("sendCORSHeader"));
     setCrossOrigin();
     server.send(204);
 }
 
-void handleToggle()
-{
+void handleToggle() {
     light.setForceLight(!light.forceLight);
     setCrossOrigin();
     server.send(200, "text/plain", "toggled light");
 }
 
-void handleVerify()
-{
+void handleVerify() {
     // String resText = "light is ";
     // resText += light.forceLight ? "on" : "off";
-    // printToTft(resText, false, 40);
     String resText = "{\"force\":";
     resText += (light.forceLight ? "true" : "false");
     resText += "}";
@@ -142,40 +84,30 @@ void handleVerify()
     server.send(200, "application/json", resText);
 }
 
-void handleLightTimes()
-{
+void handleLightTimes() {
     setCrossOrigin();
     server.send(200, "application/json", lightStorage.getTimesAsJson());
 }
 
-void handleUpdateLightTimes()
-{
+void handleUpdateLightTimes() {
     lightStorage.save(server.arg(0));
     setCrossOrigin();
     server.send(200, "application/json", lightStorage.getTimesAsJson());
 }
 
-void setup()
-{
+void setup() {
     Serial.begin(9600);
     Serial.println("Start");
     lightStorage.setup();
 
     wifiManager.setConfigPortalTimeout(180);
 
-    startupScreen();
-
-    printToTft("ESPLIGHT");
-
-    button_init();
-
     lightStorage.load();
 
     connectToWifi();
 
     server.on("/", HTTP_GET,
-              []()
-              { server.send(200, "text/plain", "Welcome to reeflight :)"); });
+              []() { server.send(200, "text/plain", "Welcome to reeflight :)"); });
 
     server.on("/toggle", HTTP_GET,
               handleToggle);
@@ -196,16 +128,10 @@ void setup()
     server.begin();
 }
 
-void loop()
-{
-    button_loop();
-
+void loop() {
     Date timeNow = ntpHelper.getTime();
 
     light.loop(timeNow, lightStorage.timesSaved, lightStorage.lightTimes);
 
-    if (runServer)
-    {
-        server.handleClient();
-    }
+    server.handleClient();
 }

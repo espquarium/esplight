@@ -8,10 +8,7 @@ const long gmtOffset_sec = 0;
 
 NTPClient timeClient = NTPClient(udp, ntpServer, gmtOffset_sec, 60000);
 
-struct Date {
-    int hours;
-    int minutes;
-};
+
 
 class NTPHelper {
    public:
@@ -23,8 +20,8 @@ class NTPHelper {
 
         Date date;
 
-        date.hours = timeClient.getHours();
-        date.minutes = timeClient.getMinutes();
+        date.h = timeClient.getHours();
+        date.m = timeClient.getMinutes();
 
         return date;
     }

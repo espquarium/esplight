@@ -34,7 +34,6 @@ void saveConfigCallback() {
 void connectToWifi() {
     String portalName = "ESPLIGHT-WIFI";
 
-    WiFi.setHostname(portalName.c_str());
     wifiManager.setSTAStaticIPConfig(IPAddress(192, 168, 1, 99), IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
 
     if (!wifiManager.autoConnect(portalName.c_str())) {
@@ -132,6 +131,8 @@ void loop() {
     Date timeNow = ntpHelper.getTime();
 
     light.loop(timeNow, lightStorage.timesSaved, lightStorage.lightTimes);
+
+    delay(2);
 
     server.handleClient();
 }

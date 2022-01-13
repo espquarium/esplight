@@ -3,12 +3,10 @@
 
 WiFiUDP udp;
 
-const char* ntpServer = "pool.ntp.org";
+const char* ntpServer = "201.49.148.135";
 const long gmtOffset_sec = 0;
 
 NTPClient timeClient = NTPClient(udp, ntpServer, gmtOffset_sec, 60000);
-
-
 
 class NTPHelper {
    public:
@@ -16,7 +14,9 @@ class NTPHelper {
     }
 
     Date getTime() {
-        timeClient.update();
+        while (!timeClient.update()) {
+            timeClient.forceUpdate();
+        }
 
         Date date;
 

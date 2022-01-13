@@ -1,16 +1,16 @@
 #include "analogWrite.h"
 #include "lighttime_struct.h"
 
-#define MAX_BRIGHTNESS 100
+int MAX_BRIGHTNESS = 100;
 
-int PINS[MAX_CHANNELS] = {36, 39, 41, 40};
+int PINS[MAX_CHANNELS] = {23, 22, 1, 3};
 
 class LightHelper {
    public:
     bool forceLight;
 
     LightHelper() {
-        this->forceLight = true;
+        this->forceLight = false;
     }
 
     void
@@ -22,8 +22,8 @@ class LightHelper {
 
     void
     perChannel(int channels[MAX_CHANNELS]) {
-        for (int ch = 0; ch < MAX_CHANNELS; ch++) {
-            analogWrite(PINS[ch], ch, MAX_BRIGHTNESS);
+        for (int channelNumber = 0; channelNumber < MAX_CHANNELS; channelNumber++) {
+            analogWrite(PINS[channelNumber], channels[channelNumber], MAX_BRIGHTNESS);
         }
     }
 
@@ -31,10 +31,11 @@ class LightHelper {
         if (this->forceLight) {
             allChannels(MAX_BRIGHTNESS);
         } else {
-            for (int i = timesSaved; i != 0; i--) {
+            for (int i = 0; i < timesSaved + 1; i++) {
                 LightTime lightSaved = lightTimes[i];
-                if (timeNow.h >= lightSaved.h && timeNow.m >= lightSaved.m) {
-                    return this->perChannel(lightSaved.c);
+                if (lightSaved.h == timeNow.h) {
+                    this->perChannel(lightSaved.c);
+                    break;
                 }
             }
         }

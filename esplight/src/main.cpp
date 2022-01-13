@@ -132,7 +132,5 @@ void loop() {
 
     light.loop(timeNow, lightStorage.timesSaved, lightStorage.lightTimes);
 
-    delay(2);
-
     server.handleClient();
 }

@@ -31,7 +31,7 @@ class LightHelper {
         if (this->forceLight) {
             allChannels(MAX_BRIGHTNESS);
         } else {
-            for (int i = 0; i < timesSaved + 1; i++) {
+            for (int i = 0; i <= timesSaved; i++) {
                 LightTime lightSaved = lightTimes[i];
                 if (lightSaved.h == timeNow.h) {
                     this->perChannel(lightSaved.c);

@@ -4,7 +4,7 @@
 WiFiUDP udp;
 
 const char* ntpServer = "201.49.148.135";
-const long gmtOffset_sec = 0;
+const long gmtOffset_sec = -10800;
 
 NTPClient timeClient = NTPClient(udp, ntpServer, gmtOffset_sec, 60000);
 

@@ -13,6 +13,10 @@ class LightHelper {
         this->forceLight = false;
     }
 
+    void setup() {
+        this->allChannels(0);
+    }
+
     void
     allChannels(int brightness) {
         for (int ch : PINS) {
@@ -31,11 +35,12 @@ class LightHelper {
         if (this->forceLight) {
             allChannels(MAX_BRIGHTNESS);
         } else {
-            for (int i = 0; i <= timesSaved; i++) {
-                LightTime lightSaved = lightTimes[i];
-                if (lightSaved.h == timeNow.h) {
+            int index = timesSaved;
+            while (index--) {
+                LightTime lightSaved = lightTimes[index];
+                if (lightSaved.h <= timeNow.h && lightSaved.m <= timeNow.m) {
                     this->perChannel(lightSaved.c);
-                    break;
+                    return;
                 }
             }
         }

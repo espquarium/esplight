@@ -38,7 +38,7 @@ void connectToWifi() {
 
     if (!wifiManager.autoConnect(portalName.c_str())) {
         espDelay(3000);
-        //reset and try again, or maybe put it to deep sleep
+        // reset and try again, or maybe put it to deep sleep
         ESP.restart();
         espDelay(5000);
     }
@@ -83,6 +83,17 @@ void handleVerify() {
     server.send(200, "application/json", resText);
 }
 
+void handleHour() {
+    // String resText = "light is ";
+    // resText += light.forceLight ? "on" : "off";
+    Date time = ntpHelper.getTime();
+    String resText = String(time.h);
+    resText += ":";
+    resText += String(time.m);
+    setCrossOrigin();
+    server.send(200, "text/plain", resText);
+}
+
 void handleLightTimes() {
     setCrossOrigin();
     server.send(200, "application/json", lightStorage.getTimesAsJson());
@@ -96,12 +107,15 @@ void handleUpdateLightTimes() {
 
 void setup() {
     Serial.begin(9600);
+    // Serial.write(27);  // Print "esc" Serial.print("[2J");
     Serial.println("Start");
+
     lightStorage.setup();
+    lightStorage.load();
+
+    light.setup();
 
     wifiManager.setConfigPortalTimeout(180);
-
-    lightStorage.load();
 
     connectToWifi();
 
@@ -113,6 +127,9 @@ void setup() {
 
     server.on("/verify", HTTP_GET,
               handleVerify);
+
+    server.on("/hour", HTTP_GET,
+              handleHour);
 
     server.on("/light-times", HTTP_GET,
               handleLightTimes);

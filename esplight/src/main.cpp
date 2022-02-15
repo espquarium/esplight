@@ -34,7 +34,7 @@ void saveConfigCallback() {
 void connectToWifi() {
     String portalName = "ESPLIGHT-WIFI";
 
-    wifiManager.setSTAStaticIPConfig(IPAddress(192, 168, 1, 99), IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
+    // wifiManager.setSTAStaticIPConfig(IPAddress(192, 168, 1, 99), IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
 
     if (!wifiManager.autoConnect(portalName.c_str())) {
         espDelay(3000);

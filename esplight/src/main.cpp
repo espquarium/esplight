@@ -106,14 +106,14 @@ void handleUpdateLightTimes() {
 }
 
 void setup() {
+    light.setup();
+
     Serial.begin(9600);
     // Serial.write(27);  // Print "esc" Serial.print("[2J");
     Serial.println("Start");
 
     lightStorage.setup();
     lightStorage.load();
-
-    light.setup();
 
     wifiManager.setConfigPortalTimeout(180);
 

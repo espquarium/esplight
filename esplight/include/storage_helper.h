@@ -7,7 +7,7 @@
 
 #define FILE_PATH "/data.json"
 
-const size_t capacity = 6144;
+const size_t capacity = 12000;
 
 class LighTimeStorage {
    public:
@@ -26,7 +26,7 @@ class LighTimeStorage {
         return 1;
     }
 
-    String transformDocumentInStruct(DynamicJsonDocument doc) {
+    void transformDocumentInStruct(DynamicJsonDocument& doc) {
         this->timesSaved = 0;
         this->rawJson = "[";
 
@@ -45,17 +45,20 @@ class LighTimeStorage {
             this->lightTimes[i].m = m;
 
             JsonArray channels = item["c"];
-
+            // Serial.println("===================");
+            // Serial.println("Exibindo brightness ");
+            // Serial.print(h);
+            // Serial.print(":");
+            // Serial.print(m);
             for (int ch = 0; ch < channels.size(); ch++) {
                 int brightness = channels.getElement(ch);
-                // Serial.println(brightness);
+                // Serial.print(brightness);
+                // Serial.print(",");
                 this->lightTimes[i].c[ch] = brightness;
             }
         }
 
         this->rawJson += "]";
-
-        return this->rawJson;
     }
 
     void load() {
@@ -81,7 +84,7 @@ class LighTimeStorage {
         }
 
         if (error) {
-            Serial.print(F("deserializeJson() failed: "));
+            Serial.println("deserializeJson() failed: ");
             Serial.println(error.f_str());
             return;
         }

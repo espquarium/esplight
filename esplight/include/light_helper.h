@@ -4,6 +4,7 @@
 int MAX_BRIGHTNESS = 100;
 
 int PINS[MAX_CHANNELS] = {23, 22, 1, 3};
+// int PINS[MAX_CHANNELS] = {2, 22, 1, 3};
 
 class LightHelper {
    public:

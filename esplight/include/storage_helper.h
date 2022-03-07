@@ -7,6 +7,8 @@
 
 #define FILE_PATH "/data.json"
 
+const size_t capacity = 6144;
+
 class LighTimeStorage {
    public:
     LightTime lightTimes[48];
@@ -14,6 +16,7 @@ class LighTimeStorage {
     String rawJson;
 
     LighTimeStorage() {
+        this->rawJson = "";
     }
 
     bool setup() {
@@ -24,53 +27,55 @@ class LighTimeStorage {
     }
 
     String transformDocumentInStruct(DynamicJsonDocument doc) {
+        this->timesSaved = 0;
+        this->rawJson = "[";
+
         int i = 0;
-        for (JsonObject item : doc.as<JsonArray>()) {
+        JsonArray times = doc.as<JsonArray>();
+
+        this->timesSaved = times.size();
+
+        for (JsonObject item : times) {
+            serializeJson(item, this->rawJson);
+
             int h = item["h"];
             int m = item["m"];
-
-            JsonArray c = item["c"];
-            int c_0 = c[0];
-            int c_1 = c[1];
-            int c_2 = c[2];
-            int c_3 = c[3];
 
             this->lightTimes[i].h = h;
             this->lightTimes[i].m = m;
 
-            this->lightTimes[i].c[0] = c_0;
-            this->lightTimes[i].c[1] = c_1;
-            this->lightTimes[i].c[2] = c_2;
-            this->lightTimes[i].c[3] = c_3;
+            JsonArray channels = item["c"];
 
-            i++;
+            for (int ch = 0; ch < channels.size(); ch++) {
+                int brightness = channels.getElement(ch);
+                // Serial.println(brightness);
+                this->lightTimes[i].c[ch] = brightness;
+            }
         }
-        this->timesSaved = i;
 
-        this->rawJson = "";
-
-        serializeJson(doc, this->rawJson);
+        this->rawJson += "]";
 
         return this->rawJson;
     }
 
     void load() {
-        DynamicJsonDocument doc(6144);
-        File data = LITTLEFS.open(FILE_PATH, "r");
+        DynamicJsonDocument doc(capacity);
+        File data = LITTLEFS.open(FILE_PATH, FILE_READ);
         Serial.println("loading json file");
         DeserializationError error;
 
         if (!data) {
             Serial.println("no json found, creating our");
             // no data, create example json
-            char json[] = "[{ \"h\": 10, \"m\": 0, \"c\": [100, 100, 100, 100]},{ \"h\": 18, \"m\": 0, \"c\": [100, 100, 100, 100]}]";
+            char json[] = "[{\"h\":9,\"m\":0,\"c\":[100,100,100,100]},{\"h\": 21,\"m\": 0,\"c\":[0,0,0,0]}]";
             error = deserializeJson(doc, json);
         } else {
             Serial.println("json found :), loading it");
             size_t size = data.size();
             std::unique_ptr<char[]> buf(new char[size]);
             data.readBytes(buf.get(), size);
-
+            Serial.print("Loaded json: ");
+            Serial.print(buf.get());
             error = deserializeJson(doc, buf.get());
             data.close();
         }
@@ -87,7 +92,7 @@ class LighTimeStorage {
     }
 
     void save(const String json) {
-        DynamicJsonDocument doc(6144);
+        DynamicJsonDocument doc(capacity);
         DeserializationError error = deserializeJson(doc, json);
 
         if (error) {

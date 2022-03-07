@@ -34,15 +34,12 @@ void saveConfigCallback() {
 void connectToWifi() {
     String portalName = "ESPLIGHT-WIFI";
 
-    // wifiManager.setSTAStaticIPConfig(IPAddress(192, 168, 1, 99), IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
+    wifiManager.setSTAStaticIPConfig(IPAddress(192, 168, 0, 98), IPAddress(192, 168, 0, 1), IPAddress(255, 255, 255, 0));
 
-    if (!wifiManager.autoConnect(portalName.c_str())) {
+    while (!wifiManager.autoConnect(portalName.c_str())) {
+        Serial.println("retrying wifi conection");
         espDelay(3000);
-        // reset and try again, or maybe put it to deep sleep
-        ESP.restart();
-        espDelay(5000);
     }
-    espDelay(3000);
 }
 
 void setCrossOrigin() {
@@ -120,7 +117,7 @@ void setup() {
     connectToWifi();
 
     server.on("/", HTTP_GET,
-              []() { server.send(200, "text/plain", "Welcome to reeflight :)"); });
+              []() { Serial.println(lightStorage.timesSaved); server.send(200, "text/plain", "Welcome to reeflight :)"); });
 
     server.on("/toggle", HTTP_GET,
               handleToggle);

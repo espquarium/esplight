@@ -3,7 +3,7 @@
 
 int MAX_BRIGHTNESS = 100;
 
-int PINS[MAX_CHANNELS] = {23, 22, 1, 3};
+int PINS[MAX_CHANNELS] = {2, 22, 1, 3};
 
 class LightHelper {
    public:
@@ -35,9 +35,10 @@ class LightHelper {
         if (this->forceLight) {
             allChannels(MAX_BRIGHTNESS);
         } else {
-            int index = timesSaved;
-            while (index--) {
-                LightTime lightSaved = lightTimes[index];
+            for (size_t i = 0; i < timesSaved; i++) {
+                LightTime lightSaved = lightTimes[i];
+                // Serial.println("While ");
+                // Serial.print(lightSaved.m);
                 if (lightSaved.h <= timeNow.h && lightSaved.m <= timeNow.m) {
                     this->perChannel(lightSaved.c);
                     return;

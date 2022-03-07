@@ -1,6 +1,7 @@
 {
   "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Chromium , IndentWidth: 4, ColumnLimit: 0}",
   "files.associations": {
+    "*.ejs": "html",
     "array": "cpp",
     "bitset": "cpp",
     "string_view": "cpp",
@@ -24,6 +25,7 @@
     "fstream": "cpp",
     "memory": "cpp",
     "atomic": "cpp",
-    "ostream": "cpp"
+    "ostream": "cpp",
+    "algorithm": "cpp"
   }
 }

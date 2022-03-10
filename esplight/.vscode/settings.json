@@ -26,6 +26,16 @@
     "memory": "cpp",
     "atomic": "cpp",
     "ostream": "cpp",
-    "algorithm": "cpp"
+    "algorithm": "cpp",
+    "cmath": "cpp",
+    "exception": "cpp",
+    "iomanip": "cpp",
+    "iosfwd": "cpp",
+    "istream": "cpp",
+    "limits": "cpp",
+    "new": "cpp",
+    "sstream": "cpp",
+    "streambuf": "cpp",
+    "typeinfo": "cpp"
   }
 }

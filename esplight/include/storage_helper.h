@@ -30,13 +30,13 @@ class LighTimeStorage {
 
     void transformDocumentInStruct(DynamicJsonDocument& doc) {
         this->timesSaved = 0;
-        this->rawJson = "[";
+
+        this->rawJson = "";
+        serializeJson(doc, this->rawJson);
 
         int i = 0;
         JsonArray times = doc.as<JsonArray>();
         for (JsonObject item : times) {
-            serializeJson(item, this->rawJson);
-
             int h = item["h"];
             int m = item["m"];
 
@@ -68,7 +68,6 @@ class LighTimeStorage {
             i++;
         }
         this->timesSaved = i + 1;
-        this->rawJson += "]";
     }
 
     void load() {

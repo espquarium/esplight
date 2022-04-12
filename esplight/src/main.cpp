@@ -34,7 +34,7 @@ void saveConfigCallback() {
 void connectToWifi() {
     String portalName = "ESPLIGHT-WIFI";
 
-    wifiManager.setSTAStaticIPConfig(IPAddress(192, 168, 0, 95), IPAddress(192, 168, 0, 1), IPAddress(255, 255, 255, 0));
+    wifiManager.setSTAStaticIPConfig(IPAddress(192, 168, 0, 98), IPAddress(192, 168, 0, 1), IPAddress(255, 255, 255, 0));
 
     while (!wifiManager.autoConnect(portalName.c_str())) {
         Serial.println("retrying wifi conection");

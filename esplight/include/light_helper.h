@@ -35,17 +35,16 @@ class LightHelper {
     void loop(Date timeNow, int timesSaved, LightTime lightTimes[48]) {
         if (this->forceLight) {
             allChannels(MAX_BRIGHTNESS);
-        } else {
+        } else if (timesSaved > 0) {
             int i = timesSaved - 1;
             while (i--) {
                 LightTime lightSaved = lightTimes[i];
                 // Serial.println("While ");
                 // Serial.println(lightSaved.h);
-                if (lightSaved.h <= timeNow.h && lightSaved.m <= timeNow.m) {
-                    this->perChannel(lightSaved.c);
-                    return;
+                if (lightSaved.h < timeNow.h || (lightSaved.h == timeNow.h && lightSaved.m <= timeNow.m)) {
+                    return this->perChannel(lightSaved.c);
                 }
-            }
+            };
         }
     }
 

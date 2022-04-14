@@ -3,7 +3,7 @@
 
 #define MAX_BRIGHTNESS 100
 
-int PINS[MAX_CHANNELS] = {23, 22, 1, 3};
+int PINS[MAX_CHANNELS] = {21, 19, 18, 5};
 // int PINS[MAX_CHANNELS] = {2, 22, 1, 3};
 
 class LightHelper {
@@ -27,14 +27,17 @@ class LightHelper {
 
     void
     perChannel(int channels[MAX_CHANNELS]) {
+        // Serial.print(F("=== perChannel ==="));
         for (int channelNumber = 0; channelNumber < MAX_CHANNELS; channelNumber++) {
+            // Serial.println(channels[channelNumber]);
             analogWrite(PINS[channelNumber], channels[channelNumber], MAX_BRIGHTNESS);
         }
     }
 
     void loop(Date timeNow, int timesSaved, LightTime lightTimes[48]) {
+        // Serial.println(F("======= loop s ====="));
         if (this->forceLight) {
-            allChannels(MAX_BRIGHTNESS);
+            return allChannels(MAX_BRIGHTNESS);
         } else if (timesSaved > 0) {
             int i = timesSaved - 1;
             while (i--) {

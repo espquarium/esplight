@@ -60,8 +60,8 @@ class LighTimeStorage {
             JsonArray channels = item["c"];
             for (int ch = 0; ch < channels.size(); ch++) {
                 int brightness = channels.getElement(ch);
-                Serial.print(brightness);
-                Serial.print(",");
+                // Serial.print(brightness);
+                // Serial.print(",");
                 this->lightTimes[i].c[ch] = brightness;
             }
 
